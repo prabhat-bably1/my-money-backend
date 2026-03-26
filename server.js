@@ -89,7 +89,9 @@ app.post("/verify-payment", async (req,res)=>{
     res.status(400).json({error:"Payment Failed"});
   }
 });
-
+app.get("/", (req, res) => {
+  res.send("My Money API Running 🚀");
+});
 app.listen(process.env.PORT || 5000, ()=>{
   console.log("Server running");
 });
