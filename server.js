@@ -31,30 +31,49 @@ const razorpay = new Razorpay({
 });
 
 /* ================= Auth ================= */
-app.post("/signup", async (req,res)=>{
-  const {email,password} = req.body;
+app.post("/signup", async (req, res) => {
+  try {
+    const { email, password } = req.body;
 
-  const hashed = await bcrypt.hash(password,10);
+    const hashed = await bcrypt.hash(password, 10);
 
-  await User.create({email,password:hashed});
+    const user = await User.create({
+      email,
+      password: hashed
+    });
 
-  res.json({success:true});
+    res.json({ success: true });
+
+  } catch (err) {
+    console.log("SIGNUP ERROR:", err);
+    res.status(500).json({ error: "Server error" });
+  }
 });
+app.post("/login", async (req, res) => {
+  try {
+    const { email, password } = req.body;
 
-app.post("/login", async (req,res)=>{
-  const {email,password} = req.body;
+    const user = await User.findOne({ email });
+    if (!user) {
+      return res.status(400).json({ error: "User not found" });
+    }
 
-  const user = await User.findOne({email});
-  if(!user) return res.status(400).json({error:"User not found"});
+    const valid = await bcrypt.compare(password, user.password);
+    if (!valid) {
+      return res.status(400).json({ error: "Wrong password" });
+    }
 
-  const valid = await bcrypt.compare(password,user.password);
-  if(!valid) return res.status(400).json({error:"Wrong password"});
+    const token = jwt.sign({ id: user._id }, "secret123");
 
-  const token = jwt.sign({id:user._id},process.env.JWT_SECRET);
+    res.json({
+      token: token
+    });
 
-  res.json({token,isPro:user.isPro});
+  } catch (err) {
+    console.log("LOGIN ERROR:", err); // 🔥 VERY IMPORTANT
+    res.status(500).json({ error: "Server error" });
+  }
 });
-
 /* ================= Razorpay ================= */
 app.get("/get-key",(req,res)=>{
   res.json({key:process.env.KEY_ID});
