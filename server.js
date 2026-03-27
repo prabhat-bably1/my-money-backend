@@ -51,26 +51,34 @@ app.post("/signup", async (req, res) => {
 });
 app.post("/login", async (req, res) => {
   try {
+    console.log("BODY:", req.body);
+
     const { email, password } = req.body;
 
     const user = await User.findOne({ email });
+    console.log("USER:", user);
+
     if (!user) {
       return res.status(400).json({ error: "User not found" });
     }
 
     const valid = await bcrypt.compare(password, user.password);
+    console.log("VALID:", valid);
+
     if (!valid) {
       return res.status(400).json({ error: "Wrong password" });
     }
 
-    const token = jwt.sign({ id: user._id }, "secret123");
+    // 🔥 SAFE JWT
+    const token = jwt.sign(
+      { id: user._id },
+      process.env.JWT_SECRET || "fallback_secret"
+    );
 
-    res.json({
-      token: token
-    });
+    res.json({ success: true, token });
 
   } catch (err) {
-    console.log("LOGIN ERROR:", err); // 🔥 VERY IMPORTANT
+    console.log("🔥 LOGIN ERROR:", err);
     res.status(500).json({ error: "Server error" });
   }
 });
