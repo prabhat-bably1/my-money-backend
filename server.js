@@ -8,7 +8,7 @@ app.use(express.json());
 app.use(cors());
 
 // MongoDB connect
-mongoose.connect("mongodb+srv://prabhatrseth4_db_user:Sradha17@cluster0.kr1tylj.mongodb.net/?appName=Cluster0");
+mongoose.connect("mongodb+srv://prabhatrseth4_db_user:Sradha17@cluster0.kr1tylj.mongodb.net/mymoney?retryWrites=true&w=majority");
 
 // Models
 const User = mongoose.model("User", {
