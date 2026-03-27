@@ -8,7 +8,7 @@ app.use(express.json());
 app.use(cors());
 
 // MongoDB connect
-mongoose.connect("YOUR_MONGODB_URL");
+mongoose.connect("mongodb+srv://prabhatrseth4_db_user:Sradha17@cluster0.kr1tylj.mongodb.net/?appName=Cluster0");
 
 // Models
 const User = mongoose.model("User", {
