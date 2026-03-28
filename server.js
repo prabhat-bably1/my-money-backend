@@ -1,16 +1,14 @@
 const express = require("express");
 const mongoose = require("mongoose");
 const cors = require("cors");
-const jwt = require("jsonwebtoken");
 
 const app = express();
 app.use(express.json());
 app.use(cors());
 
-const SECRET = "mymoneysecret";
-
-// MongoDB
-mongoose.connect("YOUR_MONGODB_URL");
+mongoose.connect("YOUR_MONGO_URL")
+.then(()=>console.log("MongoDB Connected"))
+.catch(err=>console.log(err));
 
 // Models
 const User = mongoose.model("User", {
@@ -26,74 +24,54 @@ const Transaction = mongoose.model("Transaction", {
 });
 
 // Signup
-app.post("/signup", async (req, res) => {
+app.post("/signup", async (req,res)=>{
   await User.create(req.body);
-  res.json({ message: "User created" });
+  res.json({message:"Signup success"});
 });
 
 // Login
-app.post("/login", async (req, res) => {
+app.post("/login", async (req,res)=>{
   const user = await User.findOne(req.body);
 
-  if (user) {
-    const token = jwt.sign({ id: user._id }, SECRET);
-    res.json({ success: true, token });
+  if(user){
+    res.json({success:true, userId:user._id});
   } else {
-    res.json({ success: false });
+    res.json({success:false});
   }
 });
 
 // Add
-app.post("/add", async (req, res) => {
-  const token = req.headers.authorization;
-
-  try {
-    const decoded = jwt.verify(token, SECRET);
-
-    await Transaction.create({
-      ...req.body,
-      userId: decoded.id
-    });
-
-    res.json({ message: "Added" });
-  } catch {
-    res.json({ message: "Auth failed" });
-  }
+app.post("/add", async (req,res)=>{
+  await Transaction.create(req.body);
+  res.json({message:"Added"});
 });
 
-// Get Transactions
-app.get("/transactions", async (req, res) => {
-  const token = req.headers.authorization;
-
-  const decoded = jwt.verify(token, SECRET);
-
-  const data = await Transaction.find({ userId: decoded.id });
-
+// Get all
+app.post("/get", async (req,res)=>{
+  const data = await Transaction.find({userId:req.body.userId});
   res.json(data);
 });
 
+// Delete
+app.post("/delete", async (req,res)=>{
+  await Transaction.findByIdAndDelete(req.body.id);
+  res.json({message:"Deleted"});
+});
+
 // Balance
-app.get("/balance", async (req, res) => {
-  const token = req.headers.authorization;
-
-  const decoded = jwt.verify(token, SECRET);
-
-  const data = await Transaction.find({ userId: decoded.id });
+app.post("/balance", async (req,res)=>{
+  const data = await Transaction.find({userId:req.body.userId});
 
   let balance = 0;
 
-  data.forEach(t => {
-    if (t.type === "income") balance += t.amount;
+  data.forEach(t=>{
+    if(t.type==="income") balance += t.amount;
     else balance -= t.amount;
   });
 
-  res.json({ balance });
+  res.json({balance});
 });
 
-// Delete
-app.delete("/delete/:id", async (req, res) => {
-  await Transaction.findByIdAndDelete(req.params.id);
-  res.json({ message: "Deleted" });
-});
+app.get("/",(req,res)=>res.send("API Running"));
 
-app.listen(3000, () => console.log("Server running"));
+app.listen(10000,()=>console.log("Server running"));
