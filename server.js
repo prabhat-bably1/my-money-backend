@@ -1,13 +1,17 @@
 const express = require("express");
 const mongoose = require("mongoose");
 const cors = require("cors");
+const jwt = require("jsonwebtoken");
 
 const app = express();
 app.use(express.json());
 app.use(cors());
 
-mongoose.connect("YOUR_MONGO_URL")
-.then(()=>console.log("Mongo Connected"))
+const SECRET = "mymoney123";
+
+// MongoDB
+mongoose.connect("mongodb+srv://prabhatrseth4_db_user:Sradha17@cluster0.kr1tylj.mongodb.net/mymoney?retryWrites=true&w=majority")
+.then(()=>console.log("MongoDB Connected"))
 .catch(err=>console.log(err));
 
 // Models
@@ -23,39 +27,61 @@ const Transaction = mongoose.model("Transaction", {
   category: String
 });
 
+// Middleware
+function auth(req,res,next){
+  const token = req.headers.authorization;
+  if(!token) return res.json({error:"No token"});
+
+  try{
+    const decoded = jwt.verify(token, SECRET);
+    req.userId = decoded.id;
+    next();
+  }catch{
+    res.json({error:"Invalid token"});
+  }
+}
+
 // Signup
 app.post("/signup", async (req,res)=>{
-  const user = await User.findOne({email:req.body.email});
-  if(user) return res.json({message:"User exists"});
+  const {email,password} = req.body;
 
-  await User.create(req.body);
+  const exist = await User.findOne({email});
+  if(exist) return res.json({error:"User exists"});
+
+  await User.create({email,password});
   res.json({message:"Signup success"});
 });
 
 // Login
 app.post("/login", async (req,res)=>{
-  const user = await User.findOne(req.body);
+  const {email,password} = req.body;
 
-  if(!user) return res.json({success:false});
+  const user = await User.findOne({email,password});
+  if(!user) return res.json({error:"Invalid login"});
 
-  res.json({success:true, userId:user._id});
+  const token = jwt.sign({id:user._id}, SECRET);
+  res.json({token});
 });
 
 // Add
-app.post("/add", async (req,res)=>{
-  await Transaction.create(req.body);
+app.post("/add", auth, async (req,res)=>{
+  await Transaction.create({
+    userId:req.userId,
+    ...req.body
+  });
+
   res.json({message:"Added"});
 });
 
-// Get
-app.post("/get", async (req,res)=>{
-  const data = await Transaction.find({userId:req.body.userId});
+// Get all
+app.get("/transactions", auth, async (req,res)=>{
+  const data = await Transaction.find({userId:req.userId});
   res.json(data);
 });
 
 // Balance
-app.post("/balance", async (req,res)=>{
-  const data = await Transaction.find({userId:req.body.userId});
+app.get("/balance", auth, async (req,res)=>{
+  const data = await Transaction.find({userId:req.userId});
 
   let balance = 0;
   data.forEach(t=>{
@@ -66,4 +92,4 @@ app.post("/balance", async (req,res)=>{
   res.json({balance});
 });
 
-app.listen(10000,()=>console.log("Server running"));
+app.listen(10000, ()=>console.log("Server running"));
