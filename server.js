@@ -7,7 +7,7 @@ app.use(express.json());
 app.use(cors());
 
 mongoose.connect("YOUR_MONGO_URL")
-.then(()=>console.log("MongoDB Connected"))
+.then(()=>console.log("Mongo Connected"))
 .catch(err=>console.log(err));
 
 // Models
@@ -25,6 +25,9 @@ const Transaction = mongoose.model("Transaction", {
 
 // Signup
 app.post("/signup", async (req,res)=>{
+  const user = await User.findOne({email:req.body.email});
+  if(user) return res.json({message:"User exists"});
+
   await User.create(req.body);
   res.json({message:"Signup success"});
 });
@@ -33,11 +36,9 @@ app.post("/signup", async (req,res)=>{
 app.post("/login", async (req,res)=>{
   const user = await User.findOne(req.body);
 
-  if(user){
-    res.json({success:true, userId:user._id});
-  } else {
-    res.json({success:false});
-  }
+  if(!user) return res.json({success:false});
+
+  res.json({success:true, userId:user._id});
 });
 
 // Add
@@ -46,16 +47,10 @@ app.post("/add", async (req,res)=>{
   res.json({message:"Added"});
 });
 
-// Get all
+// Get
 app.post("/get", async (req,res)=>{
   const data = await Transaction.find({userId:req.body.userId});
   res.json(data);
-});
-
-// Delete
-app.post("/delete", async (req,res)=>{
-  await Transaction.findByIdAndDelete(req.body.id);
-  res.json({message:"Deleted"});
 });
 
 // Balance
@@ -63,7 +58,6 @@ app.post("/balance", async (req,res)=>{
   const data = await Transaction.find({userId:req.body.userId});
 
   let balance = 0;
-
   data.forEach(t=>{
     if(t.type==="income") balance += t.amount;
     else balance -= t.amount;
@@ -71,7 +65,5 @@ app.post("/balance", async (req,res)=>{
 
   res.json({balance});
 });
-
-app.get("/",(req,res)=>res.send("API Running"));
 
 app.listen(10000,()=>console.log("Server running"));
