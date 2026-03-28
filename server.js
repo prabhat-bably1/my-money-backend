@@ -1,14 +1,16 @@
 const express = require("express");
 const mongoose = require("mongoose");
 const cors = require("cors");
+const jwt = require("jsonwebtoken");
 
 const app = express();
-
 app.use(express.json());
 app.use(cors());
 
-// MongoDB connect
-mongoose.connect("mongodb+srv://prabhatrseth4_db_user:Sradha17@cluster0.kr1tylj.mongodb.net/mymoney?retryWrites=true&w=majority");
+const SECRET = "mymoneysecret";
+
+// MongoDB
+mongoose.connect("YOUR_MONGODB_URL");
 
 // Models
 const User = mongoose.model("User", {
@@ -25,40 +27,58 @@ const Transaction = mongoose.model("Transaction", {
 
 // Signup
 app.post("/signup", async (req, res) => {
-  try {
-    const user = new User(req.body);
-    await user.save();
-    res.json({ message: "User created" });
-  } catch {
-    res.json({ message: "Error" });
-  }
+  await User.create(req.body);
+  res.json({ message: "User created" });
 });
 
 // Login
 app.post("/login", async (req, res) => {
   const user = await User.findOne(req.body);
 
-  if (!user) {
-    return res.json({ message: "User not found" });
+  if (user) {
+    const token = jwt.sign({ id: user._id }, SECRET);
+    res.json({ success: true, token });
+  } else {
+    res.json({ success: false });
   }
-
-  res.json({ user });
 });
 
-// Add Transaction
+// Add
 app.post("/add", async (req, res) => {
+  const token = req.headers.authorization;
+
   try {
-    const t = new Transaction(req.body);
-    await t.save();
+    const decoded = jwt.verify(token, SECRET);
+
+    await Transaction.create({
+      ...req.body,
+      userId: decoded.id
+    });
+
     res.json({ message: "Added" });
   } catch {
-    res.json({ message: "Error" });
+    res.json({ message: "Auth failed" });
   }
+});
+
+// Get Transactions
+app.get("/transactions", async (req, res) => {
+  const token = req.headers.authorization;
+
+  const decoded = jwt.verify(token, SECRET);
+
+  const data = await Transaction.find({ userId: decoded.id });
+
+  res.json(data);
 });
 
 // Balance
-app.get("/balance/:userId", async (req, res) => {
-  const data = await Transaction.find({ userId: req.params.userId });
+app.get("/balance", async (req, res) => {
+  const token = req.headers.authorization;
+
+  const decoded = jwt.verify(token, SECRET);
+
+  const data = await Transaction.find({ userId: decoded.id });
 
   let balance = 0;
 
@@ -70,4 +90,10 @@ app.get("/balance/:userId", async (req, res) => {
   res.json({ balance });
 });
 
-app.listen(5000, () => console.log("Server running"));
+// Delete
+app.delete("/delete/:id", async (req, res) => {
+  await Transaction.findByIdAndDelete(req.params.id);
+  res.json({ message: "Deleted" });
+});
+
+app.listen(3000, () => console.log("Server running"));
