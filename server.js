@@ -94,12 +94,24 @@ app.get("/balance", auth, async (req,res)=>{
 
 // ADMIN USERS
 app.get("/admin/users", async (req,res)=>{
-  const users = await User.find();
+  const adminKey = req.headers.adminkey;
+
+  if(adminKey !== "12345"){
+    return res.status(403).json({error:"Unauthorized"});
+  }
+
+  const users = await User.find().select("-password");
   res.json(users);
 });
 
 // ADMIN TRANSACTIONS
 app.get("/admin/transactions", async (req,res)=>{
+  const adminKey = req.headers.adminkey;
+
+  if(adminKey !== "12345"){
+    return res.status(403).json({error:"Unauthorized"});
+  }
+
   const data = await Transaction.find();
   res.json(data);
 });
