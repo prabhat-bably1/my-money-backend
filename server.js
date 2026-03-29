@@ -92,4 +92,16 @@ app.get("/balance", auth, async (req,res)=>{
   res.json({balance});
 });
 
+// ADMIN USERS
+app.get("/admin/users", async (req,res)=>{
+  const users = await User.find();
+  res.json(users);
+});
+
+// ADMIN TRANSACTIONS
+app.get("/admin/transactions", async (req,res)=>{
+  const data = await Transaction.find();
+  res.json(data);
+});
+
 app.listen(10000, ()=>console.log("Server running"));
