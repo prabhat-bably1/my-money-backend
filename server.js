@@ -6,6 +6,9 @@ const jwt = require("jsonwebtoken");
 const app = express();
 app.use(express.json());
 app.use(cors());
+app.get("/", (req, res) => {
+  res.send("My Money Backend Running 🚀");
+});
 
 const SECRET = "mymoney123";
 
