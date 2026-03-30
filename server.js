@@ -15,7 +15,7 @@ app.get("/", (req, res) => {
 });
 
 // ✅ MongoDB (APNA URL DAALO)
-mongoose.connect("YOUR_MONGODB_URL")
+mongoose.connect("mongodb+srv://prabhatrseth4_db_user:Sradha17@cluster0.kr1tylj.mongodb.net/mymoney?retryWrites=true&w=majority")
 .then(()=>console.log("MongoDB Connected"))
 .catch(err=>console.log(err));
 
