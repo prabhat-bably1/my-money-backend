@@ -154,6 +154,23 @@ app.delete("/admin/delete-all", verifyAdmin, async (req, res) => {
   res.json({ message: "All deleted" });
 });
 
+// ✅ DELETE USER (ADMIN)
+app.delete("/admin/delete-user/:id", async (req, res) => {
+  const { id } = req.params;
+
+  try {
+    // user delete
+    await User.findByIdAndDelete(id);
+
+    // uske transactions bhi delete
+    await Transaction.deleteMany({ userId: id });
+
+    res.json({ message: "User deleted successfully" });
+  } catch (err) {
+    res.json({ error: "Delete failed" });
+  }
+});
+
 // ✅ START
 app.use(express.static("public"));
 app.listen(10000, ()=>console.log("Server running"));
