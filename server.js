@@ -9,6 +9,10 @@ app.use(cors());
 
 const SECRET = "mymoney123";
 
+// ✅ ADMIN LOGIN DETAILS
+const ADMIN_EMAIL = "admin@gmail.com";
+const ADMIN_PASS = "123456";
+
 // ✅ ROOT
 app.get("/", (req, res) => {
   res.send("Backend Running 🚀");
@@ -47,6 +51,20 @@ function auth(req,res,next){
   }
 }
 
+// ✅ ADMIN PROTECT
+function verifyAdmin(req, res, next) {
+  const token = req.headers.authorization;
+
+  if (!token) return res.json({ error: "No token" });
+
+  try {
+    jwt.verify(token, SECRET);
+    next();
+  } catch {
+    res.json({ error: "Invalid admin token" });
+  }
+}
+
 // ✅ SIGNUP
 app.post("/signup", async (req,res)=>{
   const {email,password} = req.body;
@@ -70,6 +88,18 @@ app.post("/login", async (req,res)=>{
 
   const token = jwt.sign({id:user._id}, SECRET);
   res.json({token});
+});
+
+// ✅ ADMIN LOGIN
+app.post("/admin/login", (req, res) => {
+  const { email, password } = req.body;
+
+  if (email === ADMIN_EMAIL && password === ADMIN_PASS) {
+    const token = jwt.sign({ admin: true }, SECRET);
+    res.json({ token });
+  } else {
+    res.status(401).json({ error: "Invalid admin login" });
+  }
 });
 
 // ✅ ADD
@@ -98,6 +128,30 @@ app.get("/balance", auth, async (req,res)=>{
   });
 
   res.json({balance});
+});
+
+// ✅ ADMIN: GET USERS
+app.get("/admin/users", verifyAdmin, async (req, res) => {
+  const users = await User.find();
+  res.json(users);
+});
+
+// ✅ ADMIN: GET ALL TRANSACTIONS
+app.get("/admin/transactions", verifyAdmin, async (req, res) => {
+  const tx = await Transaction.find();
+  res.json(tx);
+});
+
+// ✅ ADMIN: DELETE SINGLE TRANSACTION
+app.delete("/admin/delete/:id", verifyAdmin, async (req, res) => {
+  await Transaction.findByIdAndDelete(req.params.id);
+  res.json({ message: "Deleted" });
+});
+
+// ✅ ADMIN: DELETE ALL
+app.delete("/admin/delete-all", verifyAdmin, async (req, res) => {
+  await Transaction.deleteMany({});
+  res.json({ message: "All deleted" });
 });
 
 // ✅ START
