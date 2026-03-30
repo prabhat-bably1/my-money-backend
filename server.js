@@ -6,18 +6,20 @@ const jwt = require("jsonwebtoken");
 const app = express();
 app.use(express.json());
 app.use(cors());
-app.get("/", (req, res) => {
-  res.send("My Money Backend Running 🚀");
-});
 
 const SECRET = "mymoney123";
 
-// MongoDB
-mongoose.connect("mongodb+srv://prabhatrseth4_db_user:Sradha17@cluster0.kr1tylj.mongodb.net/mymoney?retryWrites=true&w=majority")
+// ✅ ROOT
+app.get("/", (req, res) => {
+  res.send("Backend Running 🚀");
+});
+
+// ✅ MongoDB (APNA URL DAALO)
+mongoose.connect("YOUR_MONGODB_URL")
 .then(()=>console.log("MongoDB Connected"))
 .catch(err=>console.log(err));
 
-// Models
+// ✅ MODELS
 const User = mongoose.model("User", {
   email: String,
   password: String
@@ -27,10 +29,11 @@ const Transaction = mongoose.model("Transaction", {
   userId: String,
   type: String,
   amount: Number,
-  category: String
+  category: String,
+  note: String
 });
 
-// Middleware
+// ✅ AUTH
 function auth(req,res,next){
   const token = req.headers.authorization;
   if(!token) return res.json({error:"No token"});
@@ -44,7 +47,7 @@ function auth(req,res,next){
   }
 }
 
-// Signup
+// ✅ SIGNUP
 app.post("/signup", async (req,res)=>{
   const {email,password} = req.body;
 
@@ -55,41 +58,40 @@ app.post("/signup", async (req,res)=>{
   res.json({message:"Signup success"});
 });
 
-// Login
+// ✅ LOGIN
 app.post("/login", async (req,res)=>{
   const {email,password} = req.body;
 
-  const user = await User.findOne({ email });
+  const user = await User.findOne({email});
+  if(!user) return res.json({error:"User not found"});
 
-if(!user || user.password !== password){
-  return res.json({error:"Invalid login"});
-}
+  if(user.password !== password)
+    return res.json({error:"Wrong password"});
 
   const token = jwt.sign({id:user._id}, SECRET);
   res.json({token});
 });
 
-// Add
+// ✅ ADD
 app.post("/add", auth, async (req,res)=>{
   await Transaction.create({
     userId:req.userId,
     ...req.body
   });
-
   res.json({message:"Added"});
 });
 
-// Get all
+// ✅ GET DATA
 app.get("/transactions", auth, async (req,res)=>{
   const data = await Transaction.find({userId:req.userId});
   res.json(data);
 });
 
-// Balance
+// ✅ BALANCE
 app.get("/balance", auth, async (req,res)=>{
   const data = await Transaction.find({userId:req.userId});
-
   let balance = 0;
+
   data.forEach(t=>{
     if(t.type==="income") balance += t.amount;
     else balance -= t.amount;
@@ -98,28 +100,5 @@ app.get("/balance", auth, async (req,res)=>{
   res.json({balance});
 });
 
-// ADMIN USERS
-app.get("/admin/users", async (req,res)=>{
-  const adminKey = req.headers.adminkey;
-
-  if(adminKey !== "12345"){
-    return res.status(403).json({error:"Unauthorized"});
-  }
-
-  const users = await User.find().select("-password");
-  res.json(users);
-});
-
-// ADMIN TRANSACTIONS
-app.get("/admin/transactions", async (req,res)=>{
-  const adminKey = req.headers.adminkey;
-
-  if(adminKey !== "12345"){
-    return res.status(403).json({error:"Unauthorized"});
-  }
-
-  const data = await Transaction.find();
-  res.json(data);
-});
-
+// ✅ START
 app.listen(10000, ()=>console.log("Server running"));
