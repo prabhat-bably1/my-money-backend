@@ -7,6 +7,8 @@ const app = express();
 app.use(express.json());
 app.use(cors());
 
+app.use(express.static("public"));
+
 const SECRET = "mymoney123";
 
 // ✅ ADMIN LOGIN DETAILS
