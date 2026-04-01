@@ -216,3 +216,15 @@ app.post("/user/update", auth, async (req, res) => {
     res.json({ error: "Update failed" });
   }
 });
+async function loadProfile() {
+  const res = await fetch(API + "/profile", {
+    headers: { authorization: token }
+  });
+
+  const data = await res.json();
+
+  document.getElementById("name").value = data.name || "";
+  document.getElementById("email").value = data.email || "";
+}
+
+loadProfile();
