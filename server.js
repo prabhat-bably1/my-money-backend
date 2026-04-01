@@ -174,3 +174,26 @@ app.delete("/admin/delete-user/:id", async (req, res) => {
 // ✅ START
 app.use(express.static("public"));
 app.listen(10000, ()=>console.log("Server running"));
+
+// ✅ GET PROFILE
+app.get("/user/profile", auth, async (req, res) => {
+  const user = await User.findById(req.userId);
+  res.json(user);
+});
+
+// ✅ UPDATE PROFILE
+app.post("/user/update", auth, async (req, res) => {
+  const { name, email } = req.body;
+
+  try {
+    const user = await User.findByIdAndUpdate(
+      req.userId,
+      { name, email },
+      { new: true }
+    );
+
+    res.json({ message: "Profile updated", user });
+  } catch (err) {
+    res.json({ error: "Update failed" });
+  }
+});
