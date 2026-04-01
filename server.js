@@ -68,13 +68,14 @@ function verifyAdmin(req, res, next) {
 
 // ✅ SIGNUP
 app.post("/signup", async (req,res)=>{
-  const {email,password} = req.body;
+  const { name, email, password } = req.body;
 
-  const exist = await User.findOne({email});
-  if(exist) return res.json({error:"User exists"});
+  const exist = await User.findOne({ email });
+  if(exist) return res.json({ error: "User exists" });
 
-  await User.create({email,password});
-  res.json({message:"Signup success"});
+  await User.create({ name, email, password });
+
+  res.json({ message: "Signup success" });
 });
 
 // ✅ LOGIN
