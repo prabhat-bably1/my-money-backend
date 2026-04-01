@@ -92,6 +92,23 @@ app.post("/login", async (req,res)=>{
   res.json({token});
 });
 
+// ✅ UPDATE PROFILE
+app.put("/update-profile", auth, async (req, res) => {
+  const { name, email } = req.body;
+
+  try {
+    const user = await User.findByIdAndUpdate(
+      req.userId,
+      { name, email },
+      { new: true }
+    );
+
+    res.json({ message: "Profile updated", user });
+  } catch (err) {
+    res.json({ error: "Update failed" });
+  }
+});
+
 // ✅ ADMIN LOGIN
 app.post("/admin/login", (req, res) => {
   const { email, password } = req.body;
