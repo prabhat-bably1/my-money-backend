@@ -25,6 +25,7 @@ mongoose.connect("mongodb+srv://prabhatrseth4_db_user:Sradha17@cluster0.kr1tylj.
 
 // ✅ MODELS
 const User = mongoose.model("User", {
+  name: String,
   email: String,
   password: String
 });
