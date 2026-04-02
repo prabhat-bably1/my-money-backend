@@ -26,6 +26,8 @@ const Data = mongoose.model("Data", {
   userId:String,
   amount:Number,
   type:String,
+  category:String,   // 🔥 NEW
+  note:String,       // 🔥 NEW
   date:String
 });
 
@@ -66,14 +68,16 @@ app.post("/login", async(req,res)=>{
 
 // ADD DATA
 app.post("/add", auth, async(req,res)=>{
-  const {amount,type,date} = req.body;
+  const {amount,type,category,note,date} = req.body;
 
   await Data.create({
-    userId:req.userId,
-    amount,
-    type,
-    date
-  });
+  userId:req.userId,
+  amount,
+  type,
+  category,
+  note,
+  date
+});
 
   res.json({msg:"Added"});
 });
