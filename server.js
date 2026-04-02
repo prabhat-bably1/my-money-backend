@@ -66,6 +66,23 @@ app.post("/login", async(req,res)=>{
   res.json({token});
 });
 
+// GET PROFILE
+app.get("/profile", auth, async(req,res)=>{
+  const user = await User.findById(req.userId);
+  res.json(user);
+});
+
+// UPDATE PROFILE
+app.post("/profile", auth, async(req,res)=>{
+  const {name,email} = req.body;
+
+  await User.findByIdAndUpdate(req.userId,{
+    name,email
+  });
+
+  res.json({msg:"Profile updated"});
+});
+
 // ADD DATA
 app.post("/add", auth, async(req,res)=>{
   const {amount,type,category,note,date} = req.body;
