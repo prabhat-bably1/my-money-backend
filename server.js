@@ -11,7 +11,7 @@ app.use(express.static("public"));
 const SECRET = "mymoney";
 
 // 🔗 MongoDB
-mongoose.connect("YOUR_MONGODB_URL")
+mongoose.connect("mongodb+srv://prabhatrseth4_db_user:Sradha17@cluster0.kr1tylj.mongodb.net/mymoney?retryWrites=true&w=majority")
 .then(()=>console.log("DB Connected"));
 
 // USER MODEL
