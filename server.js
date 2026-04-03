@@ -6,28 +6,27 @@ const jwt = require("jsonwebtoken");
 const app = express();
 app.use(express.json());
 app.use(cors());
-app.use(express.static("public"));
 
 const SECRET = "mymoney";
 
-// 🔗 MongoDB
+// MongoDB
 mongoose.connect("mongodb+srv://prabhatrseth4_db_user:Sradha17@cluster0.kr1tylj.mongodb.net/mymoney?retryWrites=true&w=majority")
 .then(()=>console.log("DB Connected"));
 
-// USER MODEL
+// USER
 const User = mongoose.model("User", {
   name:String,
   email:String,
   password:String
 });
 
-// DATA MODEL
+// DATA
 const Data = mongoose.model("Data", {
   userId:String,
   amount:Number,
   type:String,
-  category:String,   // 🔥 NEW
-  note:String,       // 🔥 NEW
+  category:String,
+  note:String,
   date:String
 });
 
@@ -66,35 +65,18 @@ app.post("/login", async(req,res)=>{
   res.json({token});
 });
 
-// GET PROFILE
-app.get("/profile", auth, async(req,res)=>{
-  const user = await User.findById(req.userId);
-  res.json(user);
-});
-
-// UPDATE PROFILE
-app.post("/profile", auth, async(req,res)=>{
-  const {name,email} = req.body;
-
-  await User.findByIdAndUpdate(req.userId,{
-    name,email
-  });
-
-  res.json({msg:"Profile updated"});
-});
-
 // ADD DATA
 app.post("/add", auth, async(req,res)=>{
   const {amount,type,category,note,date} = req.body;
 
   await Data.create({
-  userId:req.userId,
-  amount,
-  type,
-  category,
-  note,
-  date
-});
+    userId:req.userId,
+    amount,
+    type,
+    category,
+    note,
+    date
+  });
 
   res.json({msg:"Added"});
 });
@@ -105,5 +87,4 @@ app.get("/data", auth, async(req,res)=>{
   res.json(data);
 });
 
-// START
 app.listen(10000, ()=>console.log("Server running"));
