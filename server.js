@@ -4,87 +4,61 @@ const cors = require("cors");
 const jwt = require("jsonwebtoken");
 
 const app = express();
-app.use(express.json());
 app.use(cors());
+app.use(express.json());
 
-const SECRET = "mymoney";
-
-// MongoDB
-mongoose.connect("mongodb+srv://prabhatrseth4_db_user:Sradha17@cluster0.kr1tylj.mongodb.net/mymoney?retryWrites=true&w=majority")
-.then(()=>console.log("DB Connected"));
-
-// USER
-const User = mongoose.model("User", {
-  name:String,
-  email:String,
-  password:String
+mongoose.connect("mongodb+srv://prabhatrseth4_db_user:Sradha17@cluster0.kr1tylj.mongodb.net/mymoney?retryWrites=true&w=majority");
+const UserSchema = new mongoose.Schema({
+  email: String,
+  password: String
 });
 
-// DATA
-const Data = mongoose.model("Data", {
-  userId:String,
-  amount:Number,
-  type:String,
-  category:String,
-  note:String,
-  date:String
+const DataSchema = new mongoose.Schema({
+  userId: String,
+  amount: Number,
+  type: String,
+  category: String,
+  note: String,
+  date: String
 });
 
-// AUTH
-function auth(req,res,next){
+const User = mongoose.model("User", UserSchema);
+const Data = mongoose.model("Data", DataSchema);
+
+// 🔐 Signup
+app.post("/signup", async (req, res) => {
+  const user = new User(req.body);
+  await user.save();
+  res.send("User created");
+});
+
+// 🔐 Login
+app.post("/login", async (req, res) => {
+  const user = await User.findOne(req.body);
+  if (!user) return res.send("Invalid");
+
+  const token = jwt.sign({ id: user._id }, "secret");
+  res.json({ token });
+});
+
+// ➕ Add Data
+app.post("/add", async (req, res) => {
   const token = req.headers.authorization;
-  if(!token) return res.send("No token");
+  const decoded = jwt.verify(token, "secret");
 
-  const decoded = jwt.verify(token, SECRET);
-  req.userId = decoded.id;
-  next();
-}
+  const item = new Data({ ...req.body, userId: decoded.id });
+  await item.save();
 
-// SIGNUP
-app.post("/signup", async(req,res)=>{
-  const {name,email,password} = req.body;
-
-  const exist = await User.findOne({email});
-  if(exist) return res.json({error:"User exists"});
-
-  await User.create({name,email,password});
-  res.json({msg:"Signup success"});
+  res.send("Added");
 });
 
-// LOGIN
-app.post("/login", async(req,res)=>{
-  const {email,password} = req.body;
+// 📊 Get Data
+app.get("/data", async (req, res) => {
+  const token = req.headers.authorization;
+  const decoded = jwt.verify(token, "secret");
 
-  const user = await User.findOne({email});
-  if(!user) return res.json({error:"No user"});
-
-  if(user.password !== password)
-    return res.json({error:"Wrong password"});
-
-  const token = jwt.sign({id:user._id}, SECRET);
-  res.json({token});
-});
-
-// ADD DATA
-app.post("/add", auth, async(req,res)=>{
-  const {amount,type,category,note,date} = req.body;
-
-  await Data.create({
-    userId:req.userId,
-    amount,
-    type,
-    category,
-    note,
-    date
-  });
-
-  res.json({msg:"Added"});
-});
-
-// GET DATA
-app.get("/data", auth, async(req,res)=>{
-  const data = await Data.find({userId:req.userId});
+  const data = await Data.find({ userId: decoded.id });
   res.json(data);
 });
 
-app.listen(10000, ()=>console.log("Server running"));
+app.listen(3000, () => console.log("Server running"));
