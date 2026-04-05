@@ -68,3 +68,6 @@ app.delete("/deleteAll", auth, (req, res) => {
 // 🚀 START SERVER
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => console.log("Server running"));
+
+const bcrypt = require("bcrypt");
+bcrypt.hash("YourNewPassword@123",10).then(console.log);
