@@ -16,7 +16,7 @@ let data = [];
 app.post("/admin-login", (req,res)=>{
     const {username,password} = req.body;
 
-    if(username==="admin" && password==="1234"){
+    if(username==="admin" && password==="Admin@12345"){
         const token = jwt.sign({admin:true}, SECRET);
         res.json({token});
     } else {
