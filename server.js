@@ -16,7 +16,7 @@ const SECRET = "supersecretkey";
 const admins = [
   {
     username: "admin",
-    password: "$2a$10$7QJ8yYkM2Fqk8F6iXyJxEuJ8VbS3UQkHqQ1X2XvSx9Tn9F7ZlW7y6"
+    password: "admin123"
   }
 ];
 
